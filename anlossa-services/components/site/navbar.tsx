@@ -9,7 +9,7 @@ import {
 } from "framer-motion";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { NAV_LINKS, SITE } from "@/lib/site";
-import { Monogram } from "@/components/ui/primitives";
+import { Monogram, LogoLockup } from "@/components/ui/brand-mark";
 import { scrollToSection, scrollToTop } from "@/components/providers/smooth-scroll";
 import { cn } from "@/lib/utils";
 
@@ -90,10 +90,14 @@ export default function Navbar() {
             className="group flex items-center gap-3"
             aria-label="Anlossa Services — home"
           >
-            <Monogram className="size-7 transition-transform duration-500 group-hover:-rotate-6" />
-            <span className="flex flex-col leading-none">
-              <span className="font-serif text-[1.35rem] tracking-[-0.02em]">Anlossa</span>
-              <span className="mono-label text-[0.5rem] text-ink/45">Services</span>
+            <Monogram className="h-[26px] w-auto transition-transform duration-500 group-hover:-rotate-3" />
+            <span className="hidden flex-col leading-none sm:flex">
+              <span className="font-serif text-[1.35rem] tracking-[-0.02em]">
+                Anlossa
+              </span>
+              <span className="mono-label mt-0.5 text-[0.5rem] text-ink/45">
+                Services
+              </span>
             </span>
           </a>
 
@@ -163,10 +167,7 @@ export default function Navbar() {
             className="fixed inset-0 z-[100] bg-obsidian text-alabaster"
           >
             <div className="frame flex h-[84px] items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Monogram tone="light" className="size-7" />
-                <span className="font-serif text-[1.35rem]">Anlossa</span>
-              </div>
+              <LogoLockup tone="light" className="w-32" />
               <button
                 type="button"
                 onClick={() => setOpen(false)}

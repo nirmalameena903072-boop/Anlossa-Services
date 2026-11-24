@@ -38,14 +38,3 @@ export function SectionLabel({ index, children, tone = "light", className }: Sec
     </div>
   );
 }
-
-/** Two-slash monogram used as the Anlossa mark. */
-export function Monogram({ className, tone = "ink" }: { className?: string; tone?: "ink" | "light" | "champagne" }) {
-  const color = tone === "light" ? "text-alabaster" : tone === "champagne" ? "text-champagne" : "text-ink";
-  return (
-    <svg viewBox="0 0 32 32" className={cn("size-8", color, className)} fill="none" aria-hidden="true">
-      <path d="M6 26 16 6l10 20" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="bevel" />
-      <path d="M10.4 19.5h11.2" stroke="currentColor" strokeWidth="1.2" />
-    </svg>
-  );
-}

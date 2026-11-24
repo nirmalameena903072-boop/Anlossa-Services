@@ -2,7 +2,7 @@
 
 import { ArrowUpRight } from "lucide-react";
 import { NAV_LINKS, SITE } from "@/lib/site";
-import { Monogram } from "@/components/ui/primitives";
+import { LogoLockup } from "@/components/ui/brand-mark";
 import { scrollToSection, scrollToTop } from "@/components/providers/smooth-scroll";
 import { useCurrentYear } from "@/hooks/use-client-quality";
 
@@ -14,12 +14,7 @@ export default function Footer() {
       <div className="frame pt-16">
         <div className="grid gap-12 pb-14 lg:grid-cols-12">
           <div className="lg:col-span-5">
-            <div className="flex items-center gap-3">
-              <Monogram tone="light" className="size-8" />
-              <span className="font-serif text-[1.6rem] tracking-[-0.02em]">
-                Anlossa Services
-              </span>
-            </div>
+            <LogoLockup tone="light" className="w-44" />
             <p className="mt-6 max-w-[26rem] text-[0.86rem] leading-relaxed text-alabaster/50">
               A boutique creator partnerships &amp; sponsorship management agency
               for Indian skincare, beauty and haircare creators, and the D2C

@@ -62,6 +62,14 @@ export const metadata: Metadata = {
   creator: "Anlossa Services",
   openGraph: {
     type: "website",
+    images: [
+      {
+        url: "/brand/anlossa-og.png",
+        width: 1200,
+        height: 630,
+        alt: "Anlossa Services — creator partnerships for Indian beauty and D2C",
+      },
+    ],
     locale: "en_IN",
     url: SITE_URL,
     siteName: "Anlossa Services",
@@ -71,9 +79,17 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    images: ["/brand/anlossa-og.png"],
     title: "Anlossa Services — Creator Partnerships, India",
     description:
       "₹0 upfront. 20% commission on closed sponsorships only. A 30-day non-exclusive trial.",
+  },
+  icons: {
+    icon: [
+      { url: "/brand/icon.svg", type: "image/svg+xml" },
+      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
   },
   robots: { index: true, follow: true },
 };

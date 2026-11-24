@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { scrollToSection } from "@/components/providers/smooth-scroll";
 import Counter from "@/components/ui/counter";
+import { Monogram } from "@/components/ui/brand-mark";
 
 const HeroScene = dynamic(() => import("@/components/three/hero-scene"), {
   ssr: false,
@@ -52,7 +53,11 @@ export default function Hero() {
           transition={{ duration: 0.9, delay: 0.15, ease: EASE }}
           className="flex flex-wrap items-start justify-between gap-6"
         >
-          <div className="flex max-w-[15rem] flex-col gap-2">
+          <div className="flex max-w-[16rem] flex-col gap-2.5">
+            <div className="flex items-center gap-2.5">
+              <Monogram className="h-[22px] w-auto" />
+              <span className="mono-label text-[0.55rem] text-ink/40">/ Est. India</span>
+            </div>
             <span className="eyebrow">
               <span className="size-1.5 rounded-full bg-champagne-deep" />
               Creator Partnerships
