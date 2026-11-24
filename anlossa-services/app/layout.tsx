@@ -39,7 +39,13 @@ const jakarta = localFont({
   adjustFontFallback: "Arial",
 });
 
-const SITE_URL = "https://anlossaservices.com";
+// Canonical origin. Override per environment with NEXT_PUBLIC_SITE_URL
+// (e.g. when the production domain changes); falls back to the live
+// runs-on.dev alias so OG cards and canonical tags never point at a
+// hostname that does not resolve.
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ??
+  "https://anlossaservices.runs-on.dev";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
