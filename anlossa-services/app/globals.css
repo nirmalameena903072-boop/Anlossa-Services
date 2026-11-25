@@ -395,6 +395,13 @@
     letter-spacing: -0.03em;
   }
 
+  /* Let the compositor skip work for sections the user cannot see. Paired
+     with explicit intrinsic sizes so the scrollbar never jumps. */
+  .defer-render {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 100svh;
+  }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }

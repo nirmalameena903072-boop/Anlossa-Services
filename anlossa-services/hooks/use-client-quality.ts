@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 export type RenderQuality = "high" | "low";
 
@@ -55,4 +55,99 @@ export function useIsMounted() {
     () => true,
     () => false
   );
+}
+
+/**
+ * Scroll progress across one viewport, coalesced to at most one write per
+ * animation frame and delivered through a ref — so a scroll that fires 100+
+ * times a second never re-renders React or stalls the 3D rig.
+ */
+export function useScrollProgress(): React.RefObject<number> {
+  const progress = useRef(0);
+
+  useEffect(() => {
+    let frame = 0;
+    let pending = 0;
+
+    const commit = () => {
+      frame = 0;
+      const vh = window.innerHeight || 1;
+      progress.current = Math.min(1, Math.max(0, pending / vh));
+    };
+
+    const onScroll = () => {
+      pending = window.scrollY;
+      if (!frame) frame = requestAnimationFrame(commit);
+    };
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
+  return progress;
+}
+
+/**
+ * Coalesced pointer position in normalised device coordinates (-1 → 1).
+ * Passive listener, one frame-batched write, zero re-renders.
+ */
+export function usePointerParallax(): React.RefObject<{ x: number; y: number }> {
+  const pointer = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    let frame = 0;
+    let px = 0;
+    let py = 0;
+
+    const commit = () => {
+      frame = 0;
+      pointer.current = { x: px, y: py };
+    };
+
+    const onMove = (event: PointerEvent) => {
+      px = (event.clientX / window.innerWidth) * 2 - 1;
+      py = (event.clientY / window.innerHeight) * 2 - 1;
+      if (!frame) frame = requestAnimationFrame(commit);
+    };
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("pointermove", onMove);
+    };
+  }, []);
+
+  return pointer;
+}
+
+/**
+ * True while the element intersects the viewport. Lets a heavy subtree (the
+ * WebGL canvas) unmount entirely once it scrolls out of view, so the GPU does
+ * zero 3D work behind the rest of the page.
+ */
+export function useInViewport(
+  ref: React.RefObject<Element | null>,
+  rootMargin = "0px"
+) {
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { rootMargin }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref, rootMargin]);
+
+  return inView;
 }

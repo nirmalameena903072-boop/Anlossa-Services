@@ -71,7 +71,7 @@ export default function Navbar() {
         className={cn(
           "fixed inset-x-0 top-0 z-[80] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
           condensed
-            ? "border-b border-ink/10 bg-alabaster/85 backdrop-blur-xl"
+            ? "border-b border-ink/10 bg-[rgba(248,247,244,0.94)]"
             : "border-b border-transparent bg-transparent"
         )}
       >

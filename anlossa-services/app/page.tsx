@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <>
       <Navbar />
-      <main id="main">
+      <main id="main" className="[contain:layout_style]">
         <Hero />
         <Ticker />
         <Positioning />

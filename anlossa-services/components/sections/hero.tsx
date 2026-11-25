@@ -1,11 +1,17 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { scrollToSection } from "@/components/providers/smooth-scroll";
 import Counter from "@/components/ui/counter";
 import { Monogram } from "@/components/ui/brand-mark";
+import {
+  useInViewport,
+  usePointerParallax,
+  useScrollProgress,
+} from "@/hooks/use-client-quality";
 
 const HeroScene = dynamic(() => import("@/components/three/hero-scene"), {
   ssr: false,
@@ -20,18 +26,37 @@ const HEADLINE_TWO = ["creators", "into"];
 export default function Hero() {
   const reduce = useReducedMotion();
 
+  // The WebGL scene is unmounted entirely once the hero leaves the viewport,
+  // so scrolling the rest of the page costs the GPU nothing. The wrapper stays
+  // mounted (fixed height, no children) so there is never a layout shift.
+  const canvasWrapRef = useRef<HTMLDivElement>(null);
+  const canvasVisible = useInViewport(canvasWrapRef, "200px");
+
+  // Ref-based, rAF-coalesced scroll and pointer tracking: the 3D rig reads
+  // these inside its own frame loop and nothing here triggers a re-render.
+  const scrollRef = useScrollProgress();
+  const pointerRef = usePointerParallax();
+
+  // The h1 is the LCP element. Animating it from opacity 0 would delay the
+  // largest paint behind the main thread, so the headline is always painted and
+  // only its transform animates; supporting copy fades in separately.
   const rise = (delay: number) => ({
-    initial: reduce ? { opacity: 0 } : { y: "110%" },
-    animate: { y: "0%", opacity: 1 },
+    initial: reduce ? {} : { y: "110%" },
+    animate: { y: "0%" },
     transition: { duration: 1.15, delay, ease: EASE },
   });
 
   return (
     <section id="top" className="relative min-h-[100svh] w-full overflow-hidden bg-alabaster pt-[84px]">
       {/* WebGL layer — reserves its own box, never causes layout shift */}
-      <div className="pointer-events-none absolute inset-0 z-0 md:pointer-events-auto">
+      <div
+        ref={canvasWrapRef}
+        className="pointer-events-none absolute inset-0 z-0 md:pointer-events-auto"
+      >
         <div className="relative h-full w-full translate-y-[18%] opacity-70 md:translate-y-0 md:opacity-100">
-          <HeroScene />
+          {canvasVisible && (
+            <HeroScene scrollRef={scrollRef} pointerRef={pointerRef} />
+          )}
         </div>
       </div>
 

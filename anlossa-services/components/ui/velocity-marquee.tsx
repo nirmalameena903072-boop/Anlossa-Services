@@ -63,13 +63,30 @@ export default function VelocityMarquee({
 
   const x = useTransform(baseX, (v) => `${wrap(-100 / repeat, 0, v)}%`);
 
-  useAnimationFrame((t, delta) => {
+  // Cache the scroll-velocity factor at ~10Hz instead of per frame: `factor`
+  // is backed by a spring that only changes on scroll, and reading it every
+  // frame from inside the ticker keeps a second subscription hot.
+  const factorCache = useRef(0);
+  const sinceFactorRead = useRef(0);
+
+  useAnimationFrame((_t, delta) => {
     if (reduce) return;
-    let moveBy = (baseVelocity * (delta / 1000)) / 10;
-    if (velocityReactive) {
-      moveBy += direction.current * factor.get() * (delta / 1000);
+    const dt = Math.min(delta, 50) / 1000;
+
+    sinceFactorRead.current += dt;
+    if (sinceFactorRead.current > 0.1) {
+      sinceFactorRead.current = 0;
+      factorCache.current = factor.get();
     }
-    baseX.set(baseX.get() + moveBy);
+
+    let moveBy = baseVelocity * dt;
+    if (velocityReactive) {
+      moveBy += direction.current * factorCache.current * dt;
+    }
+    // Wrap the accumulator itself so the number never grows unbounded over a
+    // long session (float precision loss shows up as visible stutter).
+    const range = 100 / repeat;
+    baseX.set(wrap(-range, 0, baseX.get() + moveBy));
   });
 
   return (

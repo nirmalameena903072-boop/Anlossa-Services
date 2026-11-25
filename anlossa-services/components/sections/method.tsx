@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import { Handshake, PenLine, ScrollText } from "lucide-react";
 import { registerGsap } from "@/lib/gsap";
 import { SectionLabel } from "@/components/ui/primitives";
@@ -40,8 +40,17 @@ export default function Method() {
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
-  const [progress, setProgress] = useState(0);
+  const progressBar = useRef<HTMLSpanElement>(null);
   const reduce = useReducedMotion();
+
+  // Scroll progress is written straight to the bar's transform. It used to be
+  // React state, which re-rendered this whole section on every ScrollTrigger
+  // update — dozens of times a second while the section is pinned.
+  const paintProgress = (value: number) => {
+    const bar = progressBar.current;
+    if (!bar) return;
+    bar.style.transform = `scaleX(${Math.max(0.06, value)})`;
+  };
 
   useEffect(() => {
     if (reduce) return;
@@ -58,8 +67,10 @@ export default function Method() {
         start: "top 80%",
         end: "bottom 60%",
         onUpdate: (self) => {
-          setProgress(self.progress);
-          setActive(Math.min(2, Math.floor(self.progress * 3)));
+          paintProgress(self.progress);
+          // Only touch state on an actual step boundary.
+          const next = Math.min(2, Math.floor(self.progress * 3));
+          setActive((prev) => (prev === next ? prev : next));
         },
       });
       return () => st.kill();
@@ -80,10 +91,12 @@ export default function Method() {
           anticipatePin: 1,
           scrub: 0.6,
           onUpdate: (self) => {
-            setProgress(self.progress);
-            setActive(
-              Math.min(panels.length - 1, Math.max(0, Math.floor(self.progress * panels.length)))
+            paintProgress(self.progress);
+            const next = Math.min(
+              panels.length - 1,
+              Math.max(0, Math.floor(self.progress * panels.length))
             );
+            setActive((prev) => (prev === next ? prev : next));
           },
         },
       });
@@ -131,10 +144,10 @@ export default function Method() {
             <div className="sticky top-28 hidden lg:block">
               <p className="mono-label text-ink/40">Process</p>
               <div className="relative mt-6 h-[1px] w-full bg-ink/12">
-                <motion.span
-                  className="absolute inset-y-0 left-0 bg-champagne-deep"
-                  style={{ width: `${Math.max(6, progress * 100)}%` }}
-                  transition={{ duration: 0.2 }}
+                <span
+                  ref={progressBar}
+                  className="absolute inset-y-0 left-0 w-full origin-left bg-champagne-deep will-change-transform"
+                  style={{ transform: "scaleX(0.06)" }}
                 />
               </div>
               <div className="mt-6 space-y-4">

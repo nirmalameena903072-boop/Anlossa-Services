@@ -86,7 +86,7 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="section-y relative overflow-hidden bg-alabaster">
+    <section id="contact" className="defer-render section-y relative overflow-hidden bg-alabaster">
       <div className="frame">
         <SectionLabel index="05">Start the conversation</SectionLabel>
 

@@ -61,7 +61,7 @@ export default function Proof() {
   return (
     <section
       id="partners"
-      className="section-y relative overflow-hidden border-y border-ink/10 bg-alabaster"
+      className="defer-render section-y relative overflow-hidden border-y border-ink/10 bg-alabaster"
     >
       <div className="frame relative">
         <SectionLabel index="04">Proof, not promises</SectionLabel>

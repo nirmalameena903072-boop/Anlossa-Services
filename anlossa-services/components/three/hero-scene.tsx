@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
@@ -10,10 +10,15 @@ import Wordmark3D from "./wordmark-3d";
 
 type Quality = RenderQuality;
 
-/** Noise-free studio replacement: soft key, warm rim, champagne bounce. */
+/**
+ * Studio lighting built from Lightformers instead of an HDR panorama: no
+ * network fetch, no 4K texture decode, and `frames={1}` bakes the env map
+ * exactly once at mount. The map resolution is the single biggest lever on
+ * both VRAM and per-pixel cost, so it stays small.
+ */
 function StudioLights({ quality }: { quality: Quality }) {
   return (
-    <Environment resolution={quality === "high" ? 256 : 64} frames={1}>
+    <Environment resolution={quality === "high" ? 128 : 64} frames={1}>
       <Lightformer
         form="rect"
         intensity={2.6}
@@ -57,35 +62,33 @@ function StudioLights({ quality }: { quality: Quality }) {
 }
 
 /**
- * Scroll choreography: the rig composes mouse parallax, scroll progress and
- * a slow idle breath into one camera-relative group transform.
+ * Scroll choreography. Mouse parallax and scroll progress arrive as refs
+ * written by rAF-coalesced passive listeners, so this frame loop is the only
+ * place that touches three.js objects — no React render per frame, no second
+ * animation loop competing with Lenis/GSAP.
  */
 function Rig({
   children,
   scrollRef,
+  pointerRef,
 }: {
   children: React.ReactNode;
   scrollRef: React.RefObject<number>;
+  pointerRef: React.RefObject<{ x: number; y: number }>;
 }) {
   const group = useRef<THREE.Group>(null);
-  const target = useRef({ x: 0, y: 0 });
-  const { size } = useThree();
-
-  useEffect(() => {
-    const onMove = (event: PointerEvent) => {
-      const nx = (event.clientX / window.innerWidth) * 2 - 1;
-      const ny = (event.clientY / window.innerHeight) * 2 - 1;
-      target.current = { x: nx, y: ny };
-    };
-    window.addEventListener("pointermove", onMove, { passive: true });
-    return () => window.removeEventListener("pointermove", onMove);
-  }, []);
+  const { size, invalidate } = useThree();
 
   useFrame((state, delta) => {
     const g = group.current;
     if (!g) return;
+
+    // Clamp delta so a tab that regains focus after being backgrounded cannot
+    // produce one giant integration step.
+    const dt = Math.min(delta, 0.05);
     const p = scrollRef.current ?? 0;
-    const k = 1 - Math.pow(0.0015, delta);
+    const pointer = pointerRef.current ?? { x: 0, y: 0 };
+    const k = 1 - Math.pow(0.0015, dt);
 
     // Desktop editorial layout: object sits right of centre; mobile centres it
     // and drops it so the headline keeps a clean field.
@@ -93,10 +96,10 @@ function Rig({
     const baseX = wide ? 1.15 : 0;
     const baseY = wide ? -0.32 : -0.55;
 
-    const targetX = baseX + target.current.x * 0.16;
-    const targetY = baseY - target.current.y * 0.1 - p * 0.9;
-    const targetRotX = -target.current.y * 0.06 + p * 0.28;
-    const targetRotY = target.current.x * 0.12;
+    const targetX = baseX + pointer.x * 0.16;
+    const targetY = baseY - pointer.y * 0.1 - p * 0.9;
+    const targetRotX = -pointer.y * 0.06 + p * 0.28;
+    const targetRotY = pointer.x * 0.12;
     const targetScale = 1 - p * 0.28;
 
     g.position.x += (targetX - g.position.x) * k;
@@ -106,37 +109,43 @@ function Rig({
     const s = THREE.MathUtils.lerp(g.scale.x, targetScale, k);
     g.scale.setScalar(s);
     g.position.z = p * 1.1;
+
+    // The bottle and wordmark idle on their own slow motion, so keep requesting
+    // frames for as long as this canvas is mounted; the parent unmounts the
+    // whole scene once the hero leaves the viewport.
+    invalidate();
   });
 
   return <group ref={group}>{children}</group>;
 }
 
-export default function HeroScene() {
+export default function HeroScene({
+  scrollRef,
+  pointerRef,
+}: {
+  scrollRef: React.RefObject<number>;
+  pointerRef: React.RefObject<{ x: number; y: number }>;
+}) {
   const quality = useRenderQuality();
-  const scrollRef = useRef(0);
 
-  useEffect(() => {
-    const onScroll = () => {
-      const vh = window.innerHeight || 1;
-      scrollRef.current = THREE.MathUtils.clamp(window.scrollY / vh, 0, 1);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const dpr = useMemo<[number, number]>(() => (quality === "high" ? [1, 2] : [1, 1.5]), [quality]);
+  // Cap DPR at 1.5 even on retina: a 3x display otherwise renders nine times
+  // the pixels of a 1x display for an object that is all soft gradients.
+  const dpr = useMemo<[number, number]>(() => [1, 1.5], []);
 
   return (
     <Canvas
       className="!absolute inset-0"
       dpr={dpr}
-      frameloop="always"
+      // Idle-free rendering: frames are requested only while something moves
+      // (scroll, pointer, or the rig easing into place).
+      frameloop="demand"
       camera={{ position: [0, 0.2, 7.6], fov: 36 }}
       gl={{
-        antialias: quality === "high",
+        antialias: true,
         alpha: true,
         powerPreference: "high-performance",
+        stencil: false,
+        depth: true,
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1.05,
       }}
@@ -147,7 +156,7 @@ export default function HeroScene() {
         <directionalLight position={[4, 6, 5]} intensity={2.1} color="#fff6e8" />
         <directionalLight position={[-6, 2, -3]} intensity={1.1} color="#e9dcc4" />
         <StudioLights quality={quality} />
-        <Rig scrollRef={scrollRef}>
+        <Rig scrollRef={scrollRef} pointerRef={pointerRef}>
           <SerumBottle quality={quality} />
           <Wordmark3D quality={quality} size={quality === "high" ? 0.86 : 0.94} />
         </Rig>

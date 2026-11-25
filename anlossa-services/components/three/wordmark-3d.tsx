@@ -15,8 +15,12 @@ type Wordmark3DProps = {
 };
 
 /**
- * Extruded serif wordmark with a champagne-metal bevel. Bevel segments are
- * dropped on low quality, which is where most of the geometry cost lives.
+ * Extruded serif wordmark with a champagne-metal bevel.
+ *
+ * Geometry cost here is dominated by three multipliers that compound:
+ * curveSegments (per glyph outline), bevelSegments (per bevel band) and the
+ * number of glyphs. It is an extruded 2D shape, so it is cheap to over-tessellate
+ * and expensive to bevel — the bevel is what pushes triangle count up fast.
  */
 export default function Wordmark3D({
   text = "ANLOSSA",
@@ -26,16 +30,16 @@ export default function Wordmark3D({
 }: Wordmark3DProps) {
   const group = useRef<THREE.Group>(null);
 
+  // Standard rather than Physical: the clearcoat layer on MeshPhysicalMaterial
+  // costs an extra BRDF lobe per light per fragment for a difference invisible
+  // against a baked env map at this scale.
   const material = useMemo(
     () =>
-      new THREE.MeshPhysicalMaterial({
+      new THREE.MeshStandardMaterial({
         color: new THREE.Color("#C9AD80"),
         metalness: 1,
         roughness: 0.24,
-        clearcoat: 0.65,
-        clearcoatRoughness: 0.22,
         envMapIntensity: 1.4,
-        reflectivity: 1,
       }),
     []
   );
@@ -55,12 +59,12 @@ export default function Wordmark3D({
           font={FONT_URL}
           size={size}
           height={depth}
-          curveSegments={quality === "high" ? 10 : 4}
+          curveSegments={quality === "high" ? 6 : 3}
           bevelEnabled
-          bevelThickness={quality === "high" ? 0.035 : 0.02}
-          bevelSize={quality === "high" ? 0.014 : 0.008}
+          bevelThickness={0.02}
+          bevelSize={0.015}
           bevelOffset={0}
-          bevelSegments={quality === "high" ? 4 : 1}
+          bevelSegments={quality === "high" ? 3 : 1}
           letterSpacing={0.045}
           material={material}
         >
