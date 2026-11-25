@@ -218,7 +218,7 @@ const Skiper40 = ({ className }: { className?: string }) => {
     >
       <Link001 href="/services">Explore our services</Link001>
       <Link002 href="/#contact">Start a project</Link002>
-      <Link003 href="mailto:hello@anlossa.com">hello@anlossa.com</Link003>
+      <Link003 href="mailto:anlossaservices@gmail.com">anlossaservices@gmail.com</Link003>
     </div>
   );
 };

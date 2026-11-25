@@ -256,7 +256,7 @@ export default function Method() {
               <button
                 type="button"
                 onClick={() => scrollToSection("#contact")}
-                className="btn btn-ink group shrink-0"
+                className="btn btn-ink group w-full shrink-0 sm:w-auto"
               >
                 Start the process
               </button>

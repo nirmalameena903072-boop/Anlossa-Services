@@ -160,23 +160,29 @@ export default function Hero() {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.72, ease: EASE }}
-            className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center"
+            className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
           >
             <button
               type="button"
               onClick={() => scrollToSection("#contact")}
-              className="btn btn-ink group"
+              className="btn btn-ink group w-full sm:w-auto"
             >
-              For Creators — Apply for Roster
-              <ArrowUpRight className="size-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" strokeWidth={1.8} />
+              <span>
+                For Creators
+                <span className="hidden sm:inline"> — Apply for Roster</span>
+              </span>
+              <ArrowUpRight className="size-4 shrink-0 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" strokeWidth={1.8} />
             </button>
             <button
               type="button"
               onClick={() => scrollToSection("#contact")}
-              className="btn btn-outline group"
+              className="btn btn-outline group w-full sm:w-auto"
             >
-              For D2C Brands — Book Talent
-              <ArrowUpRight className="size-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" strokeWidth={1.8} />
+              <span>
+                For D2C Brands
+                <span className="hidden sm:inline"> — Book Talent</span>
+              </span>
+              <ArrowUpRight className="size-4 shrink-0 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" strokeWidth={1.8} />
             </button>
           </motion.div>
         </div>

@@ -12,7 +12,7 @@ export default function Closing() {
     <section className="relative overflow-hidden bg-obsidian py-20 text-alabaster sm:py-28">
       <div className="pointer-events-none absolute inset-0 dot-grid opacity-20" aria-hidden="true" />
       <div className="relative">
-        <VelocityMarquee baseVelocity={-46} repeat={3} className="opacity-[0.16]" velocityReactive={false}>
+        <VelocityMarquee cycleSeconds={70} repeat={3} className="opacity-[0.16]" velocityReactive={false}>
           <span className="flex items-center">
             {Array.from({ length: 3 }).map((_, i) => (
               <span key={i} className="mx-6 font-serif text-[clamp(3rem,8vw,7rem)] leading-none tracking-[-0.035em]">
@@ -51,13 +51,13 @@ export default function Closing() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, delay: 0.18 }}
-          className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row"
+          className="mt-10 flex flex-col items-stretch justify-center gap-3 px-2 sm:flex-row sm:items-center sm:px-0"
         >
-          <button type="button" onClick={() => scrollToSection("#contact")} className="btn btn-champagne group">
+          <button type="button" onClick={() => scrollToSection("#contact")} className="btn btn-champagne group w-full sm:w-auto">
             Start the conversation
             <ArrowUpRight className="size-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" strokeWidth={2} />
           </button>
-          <a href="mailto:anlossaservices@gmail.com" className="btn btn-outline-light">
+          <a href="mailto:anlossaservices@gmail.com" className="btn btn-outline-light w-full sm:w-auto">
             Email Pradeep directly
           </a>
         </motion.div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   motion,
   useAnimationFrame,
@@ -21,29 +21,46 @@ const wrap = (min: number, max: number, value: number) => {
 
 type VelocityMarqueeProps = {
   children: React.ReactNode;
-  /** Base px/second. Negative moves left. */
+  /**
+   * Seconds for one full loop of the repeated track. Slower is calmer — the
+   * default is tuned so a reader can actually finish a word before it leaves.
+   * Ignored when `baseVelocity` is supplied directly.
+   */
+  cycleSeconds?: number;
+  /** Explicit px/second. Negative moves left. Overrides `cycleSeconds`. */
   baseVelocity?: number;
   className?: string;
   repeat?: number;
   /**
-   * When true the marquee reacts to scroll velocity.
-   * Set false for a steady editorial ticker.
+   * When true the marquee reacts to scroll velocity. Keep this off for large
+   * display type, where a scroll kick turns a graceful band into a blur.
    */
   velocityReactive?: boolean;
+  /** Pause the loop while the pointer is over the band. */
+  pauseOnHover?: boolean;
 };
 
 /**
- * Velocity-reactive marquee. Scroll speed feeds directly into the track's
- * horizontal velocity, then eases back to its base speed via a spring.
+ * Velocity-reactive marquee. Scroll speed feeds into the track's horizontal
+ * velocity, then eases back to base speed via a spring.
+ *
+ * Pausing short-circuits the frame callback before any measurement or motion
+ * value write, so a paused band does no layout reads and triggers no
+ * compositor work — only the bare callback dispatch remains.
  */
 export default function VelocityMarquee({
   children,
-  baseVelocity = -60,
+  cycleSeconds,
+  baseVelocity,
   className,
   repeat = 4,
   velocityReactive = true,
+  pauseOnHover = true,
 }: VelocityMarqueeProps) {
   const reduce = useReducedMotion();
+  const [hovered, setHovered] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+
   const baseX = useMotionValue(0);
   const { scrollY } = useScroll();
   const scrollVelocity = useVelocity(scrollY);
@@ -51,7 +68,9 @@ export default function VelocityMarquee({
     damping: 50,
     stiffness: 350,
   });
-  const factor = useTransform(smoothVelocity, [-2500, 0, 2500], [4.5, 0, 4.5], {
+  // Toned down from the original 4.5x: scroll now nudges the band instead of
+  // launching it, which is what made the copy unreadable mid-scroll.
+  const factor = useTransform(smoothVelocity, [-2500, 0, 2500], [1.1, 0, 1.1], {
     clamp: false,
   });
 
@@ -61,17 +80,37 @@ export default function VelocityMarquee({
     direction.current = latest > previous ? 1 : -1;
   });
 
+  // Resolved px/second, written only inside the frame callback. Deriving it
+  // from the track's real width keeps the perceived pace identical whether one
+  // repetition is narrow (category ticker) or very wide (closing wordmark).
+  const speedRef = useRef<number>(typeof baseVelocity === "number" ? baseVelocity : -60);
+
   const x = useTransform(baseX, (v) => `${wrap(-100 / repeat, 0, v)}%`);
 
-  // Cache the scroll-velocity factor at ~10Hz instead of per frame: `factor`
-  // is backed by a spring that only changes on scroll, and reading it every
-  // frame from inside the ticker keeps a second subscription hot.
   const factorCache = useRef(0);
   const sinceFactorRead = useRef(0);
+  const measureCooldown = useRef(0);
+
+  const paused = hovered || !!reduce;
 
   useAnimationFrame((_t, delta) => {
-    if (reduce) return;
+    if (paused) return;
+
     const dt = Math.min(delta, 50) / 1000;
+
+    // Measure the track occasionally so cycleSeconds stays accurate after a
+    // resize or font swap, without reading layout every frame.
+    measureCooldown.current += dt;
+    if (measureCooldown.current > 1) {
+      measureCooldown.current = 0;
+      const el = trackRef.current;
+      if (typeof baseVelocity === "number") {
+        speedRef.current = baseVelocity;
+      } else if (el && typeof cycleSeconds === "number") {
+        const oneRep = el.scrollWidth / repeat;
+        if (oneRep > 0) speedRef.current = -(oneRep / cycleSeconds);
+      }
+    }
 
     sinceFactorRead.current += dt;
     if (sinceFactorRead.current > 0.1) {
@@ -79,19 +118,26 @@ export default function VelocityMarquee({
       factorCache.current = factor.get();
     }
 
-    let moveBy = baseVelocity * dt;
+    let moveBy = speedRef.current * dt;
     if (velocityReactive) {
       moveBy += direction.current * factorCache.current * dt;
     }
-    // Wrap the accumulator itself so the number never grows unbounded over a
-    // long session (float precision loss shows up as visible stutter).
+
     const range = 100 / repeat;
     baseX.set(wrap(-range, 0, baseX.get() + moveBy));
   });
 
   return (
-    <div className={cn("relative w-full overflow-hidden whitespace-nowrap", className)}>
-      <motion.div className="flex w-max flex-nowrap items-center will-change-transform" style={{ x }}>
+    <div
+      className={cn("relative w-full overflow-hidden whitespace-nowrap", className)}
+      onPointerEnter={pauseOnHover ? () => setHovered(true) : undefined}
+      onPointerLeave={pauseOnHover ? () => setHovered(false) : undefined}
+    >
+      <motion.div
+        ref={trackRef}
+        className="flex w-max flex-nowrap items-center will-change-transform"
+        style={{ x }}
+      >
         {Array.from({ length: repeat }).map((_, i) => (
           <span key={i} className="flex shrink-0 items-center" aria-hidden={i > 0}>
             {children}

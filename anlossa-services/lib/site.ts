@@ -9,10 +9,6 @@ export const SITE = {
     commission: "20%",
     trial: "30-day",
   },
-  social: {
-    instagram: "https://instagram.com",
-    linkedin: "https://linkedin.com",
-  },
 } as const;
 
 export const NAV_LINKS = [
@@ -161,4 +157,27 @@ export const SERVICE_CATEGORIES = [
   "D2C Launches",
   "Personal Care",
   "Barrier Repair",
+] as const;
+
+/**
+ * What each side of the marketplace actually receives. This is the value
+ * proposition shown beside the composer — concrete deliverables, not
+ * testimonials or invented examples.
+ */
+export const VALUE_CREATOR = [
+  "Direct outreach to relevant skincare, haircare and beauty sponsors",
+  "Rate negotiation and usage-rights clarity before you shoot",
+  "Contract and payment coordination handled end to end",
+  "₹0 upfront — there is no fee to join the roster",
+  "20% commission, charged only on closed deals",
+  "30-day non-exclusive trial — cancel any time",
+] as const;
+
+export const VALUE_BRAND = [
+  "Vetted Indian beauty and skincare creators, matched to product fit",
+  "Audience authenticity checked before any introduction",
+  "Campaign briefs, deliverables and approvals run through one point of contact",
+  "Rate architecture and usage rights written into one clean term sheet",
+  "Contracts and invoicing handled by Anlossa, not by you",
+  "20% on closed deals only — no retainer, no listing fee",
 ] as const;

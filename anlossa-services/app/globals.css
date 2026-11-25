@@ -101,6 +101,11 @@
     scroll-behavior: auto;
   }
 
+  html,
+  body {
+    max-width: 100%;
+  }
+
   body {
     @apply bg-alabaster text-ink antialiased;
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
@@ -256,18 +261,25 @@
   }
 
   /* Buttons */
+  /* CTA. `min-height` rather than a fixed `height` so long labels can wrap
+     onto a second line on narrow screens instead of being clipped by the
+     pill's overflow. Text is centred and never truncated. */
   .btn {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.625rem;
-    height: 3.25rem;
+    min-height: 3.25rem;
+    padding-block: 0.85rem;
     padding-inline: 1.6rem;
     font-family: var(--font-sans);
     font-size: 0.8125rem;
     font-weight: 600;
     letter-spacing: 0.01em;
+    line-height: 1.25;
+    text-align: center;
+    text-wrap: balance;
     border-radius: 999px;
     transition:
       background-color 0.45s var(--ease-editorial),
@@ -275,9 +287,17 @@
       border-color 0.45s var(--ease-editorial),
       transform 0.45s var(--ease-editorial);
     cursor: pointer;
-    white-space: nowrap;
     overflow: hidden;
     isolation: isolate;
+  }
+
+  /* Full-width, comfortable tap targets on the narrowest screens. */
+  @media (max-width: 26rem) {
+    .btn {
+      width: 100%;
+      padding-inline: 1.25rem;
+      font-size: 0.78rem;
+    }
   }
 
   .btn:active {

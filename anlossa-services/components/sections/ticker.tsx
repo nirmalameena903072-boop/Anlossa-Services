@@ -6,7 +6,7 @@ import VelocityMarquee from "@/components/ui/velocity-marquee";
 export default function Ticker() {
   return (
     <section className="relative border-y border-ink/10 bg-alabaster-2/60 py-6" aria-label="Focus categories">
-      <VelocityMarquee baseVelocity={-70} repeat={3} className="mask-fade-x">
+      <VelocityMarquee cycleSeconds={60} repeat={3} className="mask-fade-x">
         <span className="flex items-center">
           {SERVICE_CATEGORIES.map((label, i) => (
             <span key={label} className="flex items-center">
